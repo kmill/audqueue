@@ -4,6 +4,7 @@ html, body {
     margin: 0;
     padding: 0;
     background: #fff;
+    background: #aaa;
 }
 
 body, td, input, textarea, select {
@@ -20,6 +21,13 @@ a:visited {
 a:hover {
     color: #66f;
     text-decoration: underline;
+}
+
+a.clear_input {
+    text-decoration: none;
+    color: gray;
+    padding: 0.4em 0;
+    margin: 0 0 0 1em;
 }
 
 #header {
@@ -66,7 +74,7 @@ div.clear {
 }
 
 #main {
-    padding: 3em 5px 5px 5px;
+    padding: 3.5em 6px 6px 6px;
 }
 
 .database_view {
@@ -80,6 +88,7 @@ div.clear {
 .song_view {
     margin: 0;
     padding: 0;
+    background: #fff;
 }
 .song_view td {
     margin: 0;

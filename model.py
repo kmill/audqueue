@@ -23,8 +23,8 @@ class Database(object) :
         self.DB.execute("insert into song (" + ','.join(self.song_params) + ") values (" + ','.join('?' for p in self.song_params) + ")",
                         tuple(song[p] for p in self.song_params))
     def update_song(self, song) :
-        self.DB.execute("update song set " + ' and '.join(p + '=?' for p in self.song_params) + " where filename=?",
-                        tuple(song[p] for p in self.song_params) + tuple(song['filename']))
+        self.DB.execute("update song set " + ' , '.join(p + '=?' for p in self.song_params) + " where filename=?",
+                        tuple(song[p] for p in self.song_params) + (song['filename'],))
     def __enter__(self) :
         self.DB.__enter__()
         return self

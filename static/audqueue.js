@@ -36,8 +36,6 @@ function queue_songs(filenames) {
   });
 }
 
-function removeDiacritics (str) {
-
   var defaultDiacriticsRemovalMap = [
     {'base':'A', 'letters':/[\u0041\u24B6\uFF21\u00C0\u00C1\u00C2\u1EA6\u1EA4\u1EAA\u1EA8\u00C3\u0100\u0102\u1EB0\u1EAE\u1EB4\u1EB2\u0226\u01E0\u00C4\u01DE\u1EA2\u00C5\u01FA\u01CD\u0200\u0202\u1EA0\u1EAC\u1EB6\u1E00\u0104\u023A\u2C6F]/g},
     {'base':'AA','letters':/[\uA732]/g},
@@ -125,6 +123,8 @@ function removeDiacritics (str) {
     {'base':'z','letters':/[\u007A\u24E9\uFF5A\u017A\u1E91\u017C\u017E\u1E93\u1E95\u01B6\u0225\u0240\u2C6C\uA763]/g}
   ];
 
+function removeDiacritics (str) {
+
   for(var i=0; i<defaultDiacriticsRemovalMap.length; i++) {
     str = str.replace(defaultDiacriticsRemovalMap[i].letters, defaultDiacriticsRemovalMap[i].base);
   }
@@ -162,7 +162,10 @@ function Song(data) {
     parts.push(this.data.composer);
   }
   if (this.data.grouping) {
-    parts.push(this.data.composer);
+    parts.push(this.data.grouping);
+  }
+  if (this.data.genre) {
+    parts.push(this.data.genre);
   }
 
   this.index = removeDiacritics(parts.join(' ')).toLowerCase();
@@ -180,7 +183,7 @@ function DatabaseView(db) {
     this.songviews.push(sv);
   }, this);
   this.sort();
-  this.updateHighlights();
+//  this.updateHighlights();
 
   var self = this;
   $(this.$table).on('mouseenter', 'td', function () {
@@ -200,7 +203,7 @@ function DatabaseView(db) {
 
   this.throttled_search = _.debounce(function () {
     self.doSearch(this.query);
-  }, 200);
+  }, 150);
 
   this.$playall.on("click", function (e) {
     e.preventDefault();
@@ -213,12 +216,26 @@ function DatabaseView(db) {
     queue_songs(filenames);
   });
 }
-DatabaseView.prototype.updateHighlights = function () {
+DatabaseView.prototype.updateHighlights = function (songviews) {
   var i = 0;
-  _.each(this.songviews, function (songview) {
-    i = songview.updateHighlight(i);
+  var state = [];
+  _.each(songviews, function (songview) {
+    var this_state = [songview.song.data.album, songview.song.data.grouping];
+    var diff = false;
+    for (var j = 0; j < this_state.length; j++) {
+      if (state[j] !== this_state[j]) {
+        diff = true;
+        break;
+      }
+    }
+    if (diff) {
+      state = this_state;
+      i += 1;
+    }
+
+    songview.updateHighlight(i);
   });
-  if (i === 0) {
+  if (songviews.length === 0) {
     this.$el.hide();
   } else {
     this.$el.show();
@@ -226,19 +243,28 @@ DatabaseView.prototype.updateHighlights = function () {
 };
 DatabaseView.prototype.doSearch = function (query) {
   console.log(query);
+  query = removeDiacritics(query).toLowerCase().split(/\s+/);
+  var views = [];
   _.each(this.songviews, function (songview) {
-    songview.updateQuery(removeDiacritics(query).toLowerCase().split(/\s+/));
+    if (songview.matchesQuery(query)) {
+      views.push(songview);
+    }
+    //songview.updateQuery(query);
   });
-  this.updateHighlights();
+  this.$table.empty()
+  _.each(views, function(sv) {
+    this.$table.append(sv.$el);
+  }, this);
+  this.updateHighlights(views);
 };
 DatabaseView.prototype.sort = function () {
   var self = this;
   this.songviews.sort(function (sv1, sv2) {
     return self.songSortFunction(sv1.song, sv2.song);
   });
-  _.each(this.songviews, function (sv) {
+/*  _.each(this.songviews, function (sv) {
     self.$table.append(sv.$el);
-  });
+  });*/
 };
 DatabaseView.prototype.songSortFunction = function (song1, song2) {
   function sort_func(s1, s2) {
@@ -260,11 +286,11 @@ DatabaseView.prototype.songSortFunction = function (song1, song2) {
   if (s !== 0) {
     return s;
   }
-  s = sort_func(song1.data.grouping, song2.data.grouping);
+  s = sort_func(song1.data.tracknum, song2.data.tracknum);
   if (s !== 0) {
     return s;
   }
-  s = sort_func(song1.data.tracknum, song2.data.tracknum);
+  s = sort_func(song1.data.grouping, song2.data.grouping);
   if (s !== 0) {
     return s;
   }
@@ -301,28 +327,26 @@ function SongView(song) {
   this.$el = $('<tr class="song_view">');
   this.$play = $('<a href="#">+</a>').attr("song-filename", song.data.filename);
   this.$el.append($('<td class="song_view_action">').append(this.$play));
-  this.$el.append($('<td>').text(this.song.data.name));
+  var tracknum_prefix = this.song.data.tracknum ? (this.song.data.tracknum + ". ") : "";
+  this.$el.append($('<td>').text(tracknum_prefix + this.song.data.name));
   this.$el.append($('<td class="song_view_time">').text(render_time(this.song.data.time)));
   this.$el.append($('<td>').text(this.song.data.composer));
   this.$el.append($('<td>').text(this.song.data.artist));
   this.$el.append($('<td>').text(this.song.data.album));
 }
 SongView.prototype.updateHighlight = function (i) {
-  if (!this.visible) {
-    return i;
-  } else {
-    this.$el.toggleClass("evenentry", i % 2 === 0);
-    return i + 1;
+  this.$el.toggleClass("evenentry", i % 2 === 0);
+};
+SongView.prototype.matchesQuery = function (query) {
+  for (var i = 0; i < query.length; i++) {
+    if (this.song.index.indexOf(query[i]) === -1) {
+      return false;
+    }
   }
+  return true;
 };
 SongView.prototype.updateQuery = function (query) {
-  var show = true;
-  _.each(query, function (q) {
-    if (this.song.index.indexOf(q) === -1) {
-      show = false;
-    }
-  }, this);
-  if (show) {
+  if (this.matchesQuery(query)) {
     this.show();
   } else {
     this.hide();
@@ -352,9 +376,21 @@ $(function () {
       }, 1);
     });
 
-    $('#main_search').on('input', function () {
+    $('#main_search').on('input change', function () {
       dbview.update_search($(this).val());
     });
+
+    $('#main_search').clearSearch();
+
+    $(window).keydown(function (e) {
+      //console.log(e.ctrlKey, e.shiftKey, e.altKey, e.which);
+      if (e.ctrlKey && !e.shiftKey && !e.altKey && e.which == 70) { // C-f
+        e.preventDefault();
+        $('#main_search').focus();
+      }
+    });
+
+    dbview.doSearch('');
   }
 
   var db = window.db = new Database(loaded_callback);
