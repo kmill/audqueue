@@ -42,6 +42,7 @@ a.clear_input {
     border-style: solid;
     border-width: 0 0 1px 0;
     border-color: #bbb;
+    z-index: 1;
 }
 #header div.header_left {
     margin: 0;
@@ -84,6 +85,15 @@ div.clear {
     padding: 0;
     border-spacing: 0;
     border: 1px solid #ccc;
+
+    cursor: default;
+
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 .song_view {
     margin: 0;

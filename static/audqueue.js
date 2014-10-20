@@ -178,12 +178,23 @@ function DatabaseView(db) {
   this.$table = $('<table class="database_view">').appendTo(this.$el);
   this.$playall = $('<a href="#">Play all</a>').appendTo($('<p class="database_view_playall">').appendTo(this.$el));
   this.songviews = [];
+  this.visiblesongs = [];
   _.each(this.db.songs, function (song) {
     var sv = new SongView(song);
     this.songviews.push(sv);
   }, this);
   this.sort();
 //  this.updateHighlights();
+
+  this.$highlight = $("<div>").css({
+    position : "absolute",
+    border : "2px solid #000",
+    "pointer-events" : "none",
+    background: "rgba(0, 0, 255, 0.1)",
+  });
+  this.$el.append(this.$highlight);
+
+  var dblclicksongs = [];
 
   var self = this;
   $(this.$table).on('mouseenter', 'td', function () {
@@ -193,6 +204,95 @@ function DatabaseView(db) {
     } else {
       $this.removeAttr("title");
     }
+
+    function get_songname($td) {
+      return $td.parent().find('[song-filename]').attr("song-filename");
+    }
+
+    function locate(attr, attrval, /*opt*/withfilename) {
+      var songs = [];
+      var gindex = -1;
+      for (var i = 0; i < self.visiblesongs.length; i++) {
+        if (self.visiblesongs[i].texts[attr] === attrval) {
+          songs.push(self.visiblesongs[i]);
+          if (self.visiblesongs[i].song.data.filename === withfilename) {
+            gindex = self.visiblesongs[i].gindex;
+          }
+        }
+      }
+      if (withfilename) {
+        return _.filter(songs, function (s) { return s.gindex === gindex; });
+      } else {
+        return songs;
+      }
+    }
+
+    function getbounds(songs) {
+      var bounds = {left : Infinity, top : Infinity,
+                   right : -Infinity, bottom : -Infinity};
+      for (var i = 0; i < songs.length; i++) {
+        var rect = songs[i].$el[0].getBoundingClientRect();
+        if (rect.left < bounds.left) bounds.left = rect.left;
+        if (rect.right > bounds.right) bounds.right = rect.right;
+        if (rect.top < bounds.top) bounds.top = rect.top;
+        if (rect.bottom > bounds.bottom) bounds.bottom = rect.bottom;
+      }
+      return bounds;
+    }
+
+    function drawbounds(songs) {
+      if (songs.length > 0) {
+        bounds = getbounds(songs);
+        self.$highlight.css({
+          top : bounds.top + document.body.scrollTop-2,
+          left : bounds.left + document.body.scrollLeft-2,
+          width : bounds.right - bounds.left,
+          height : bounds.bottom - bounds.top
+        });
+        self.$highlight.show();
+      } else {
+        self.$highlight.hide();
+      }
+    }
+
+    var song_album = $this.attr("song-album");
+    var song_grouping = $this.attr("song-grouping");
+    if (song_album) {
+      var songs = locate("album", song_album);
+      drawbounds(songs);
+      dblclicksongs = songs;
+    } else if (song_grouping) {
+      var songs = locate("grouping", song_grouping, get_songname($this));
+      drawbounds(songs);
+      dblclicksongs = songs;
+    } else {
+      var songs = [];
+      var filename = get_songname($this);
+      for (var i = 0; i < self.visiblesongs.length; i++) {
+        if (self.visiblesongs[i].song.data.filename === filename) {
+          songs.push(self.visiblesongs[i]);
+          break;
+        }
+      }
+      drawbounds(songs);
+      dblclicksongs = songs;
+    }
+  });
+
+  $(this.$table).on("mouseleave", function () {
+    self.$highlight.hide();
+    dblclicksongs = [];
+  });
+
+  $(this.$table).on("dblclick", "tr", function (e) {
+    e.preventDefault();
+    console.log(dblclicksongs);
+
+    var filenames = [];
+    _.each(dblclicksongs, function (sv) {
+      filenames.push(sv.song.data.filename);
+    });
+    queue_songs(filenames);
   });
 
   $(this.$table).on("click", '[song-filename]', function (e) {
@@ -242,16 +342,17 @@ DatabaseView.prototype.updateHighlights = function (songviews) {
   }
 };
 DatabaseView.prototype.doSearch = function (query) {
-  console.log(query);
   query = removeDiacritics(query).toLowerCase().split(/\s+/);
-  var views = [];
+  var trivial = query.length == 0 && query[0] === "";
+  console.log(query);
+  var views = this.visiblesongs = [];
   _.each(this.songviews, function (songview) {
-    if (songview.matchesQuery(query)) {
+    if (trivial || songview.matchesQuery(query)) {
       views.push(songview);
     }
     //songview.updateQuery(query);
   });
-  this.$table.empty()
+  this.$table.empty();
   _.each(views, function(sv) {
     this.$table.append(sv.$el);
   }, this);
@@ -324,18 +425,30 @@ function render_time(time) {
 function SongView(song) {
   this.song = song;
   this.visible = true;
+
+  this.gindex = 0;
+
+  var albumtext = JSON.stringify(song.data.album);
+  var groupingtext = JSON.stringify([song.data.grouping, song.data.album]);
+
+  this.texts = {
+    "album" : albumtext,
+    "grouping" : groupingtext
+  };
+
   this.$el = $('<tr class="song_view">');
   this.$play = $('<a href="#">+</a>').attr("song-filename", song.data.filename);
   this.$el.append($('<td class="song_view_action">').append(this.$play));
   var tracknum_prefix = this.song.data.tracknum ? (this.song.data.tracknum + ". ") : "";
-  this.$el.append($('<td>').text(tracknum_prefix + this.song.data.name));
+  this.$el.append($('<td>').text(tracknum_prefix + this.song.data.name).attr("song-grouping", groupingtext));
   this.$el.append($('<td class="song_view_time">').text(render_time(this.song.data.time)));
   this.$el.append($('<td>').text(this.song.data.composer));
   this.$el.append($('<td>').text(this.song.data.artist));
-  this.$el.append($('<td>').text(this.song.data.album));
+  this.$el.append($('<td>').text(this.song.data.album).attr("song-album", albumtext));
 }
 SongView.prototype.updateHighlight = function (i) {
-  this.$el.toggleClass("evenentry", i % 2 === 0);
+  this.gindex = i;
+//  this.$el.toggleClass("evenentry", i % 2 === 0);
 };
 SongView.prototype.matchesQuery = function (query) {
   for (var i = 0; i < query.length; i++) {

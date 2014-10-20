@@ -99,7 +99,7 @@ def update_file(db, directory, root, filename) :
                 else :
                     albumname = tail
             if artist == None :
-                artist = "*Unknown Artist*"
+                artist = ""
 
             new_song = {
                 'name' : name,
@@ -212,7 +212,7 @@ class iTunesSyncer(object) :
                 if not self.currentdict.has_key("Album") :
                     self.currentdict["Album"] = "*Unknown Album*"
                 if not self.currentdict.has_key("Artist") :
-                    self.currentdict["Artist"] = "*Unknown Artist*"
+                    self.currentdict["Artist"] = ""
                 
                 d = self.currentdict
 
