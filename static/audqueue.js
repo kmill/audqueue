@@ -352,6 +352,10 @@ DatabaseView.prototype.doSearch = function (query) {
     }
     //songview.updateQuery(query);
   });
+
+  document.body.scrollTop = 0;
+  this.$highlight.hide();
+  
   this.$table.empty();
   _.each(views, function(sv) {
     this.$table.append(sv.$el);
