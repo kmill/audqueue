@@ -356,10 +356,28 @@ DatabaseView.prototype.doSearch = function (query) {
   document.body.scrollTop = 0;
   this.$highlight.hide();
   
-  this.$table.empty();
-  _.each(views, function(sv) {
-    this.$table.append(sv.$el);
-  }, this);
+  // compute diff
+  var child = this.$table[0].firstChild;
+  var i = 0;
+  while (child && i < views.length) {
+    if (views[i].$el !== child) {
+      var next = child.nextSibling;
+      this.$table[0].removeChild(child);
+      child = next;
+    } else {
+      child = child.nextSibling;
+      i++;
+    }
+  }
+  while (child) {
+    var next = child.nextSibling;
+    this.$table[0].removeChild(child);
+    child = next;
+  }
+  for (; i < views.length; i++) {
+    this.$table[0].appendChild(views[i].$el[0]);
+  }
+
   this.updateHighlights(views);
 };
 DatabaseView.prototype.sort = function () {
@@ -406,8 +424,10 @@ DatabaseView.prototype.songSortFunction = function (song1, song2) {
   return 0;
 };
 DatabaseView.prototype.update_search = function (new_search) {
-  this.query = new_search;
-  this.throttled_search();
+  if (this.query !== new_search) {
+    this.query = new_search;
+    this.throttled_search();
+  }
 };
 
 function render_time(time) {

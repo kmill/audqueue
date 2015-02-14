@@ -37,6 +37,8 @@ a.clear_input {
     width: 100%;
     padding: 3px 1em 2px 1em;
     background: #ddd;
+    background-image: linear-gradient(to bottom, #ddd, #ccc);
+    box-shadow: 2px 0 3px #666;
     font-family: "helvetica neue", "helvetica", "arial", "sans-serif";
     font-size: 12pt;
     border-style: solid;
