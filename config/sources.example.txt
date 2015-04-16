@@ -1,0 +1,2 @@
+directory=/home/me/music/torrents
+itunes=/home/me/music/iTunes
