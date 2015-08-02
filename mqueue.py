@@ -6,8 +6,30 @@
 class MQueue(object) :
     """Music file queue interface. Must have a zero-argument
     constructor."""
-    def queue(self, filenames) :
+    def url(self) :
         raise NotImplemented
+    def add(self, filenames) :
+        raise NotImplemented
+    def remove(self, pos) :
+        raise NotImplemented
+    def advance(self) :
+        raise NotImplemented
+    def reverse(self) :
+        raise NotImplemented
+    def queue(self, pos) :
+        raise NotImplemented
+    def dequeue(self, pos) :
+        raise NotImplemented
+    def jump(self, pos) :
+        raise NotImplemented
+    def playpause(self) :
+        raise NotImplemented
+    def setvolume(self, v) :
+        raise NotImplemented
+    def playlist(self) :
+        return NotImplemented
+    def clear(self) :
+        return NotImplemented
 
     @classmethod
     def get_queues(cls) :

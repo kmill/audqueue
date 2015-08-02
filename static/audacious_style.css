@@ -1,0 +1,150 @@
+/* style.css */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    background: #aaa;
+}
+
+body, td, input, textarea, select {
+    font-family: "helvetica neue", "helvetica", "arial", "sans-serif";
+}
+
+a {
+    text-decoration: none;
+    color: #00d;
+}
+a:visited {
+    color: #55c;
+}
+a:hover {
+    color: #66f;
+    text-decoration: underline;
+}
+
+a.clear_input {
+    text-decoration: none;
+    color: gray;
+    padding: 0.4em 0;
+    margin: 0 0 0 1em;
+}
+
+#header {
+    box-sizing: border-box;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    padding: 3px 1em 2px 1em;
+    background: #ddd;
+    background-image: linear-gradient(to bottom, #ddd, #ccc);
+    box-shadow: 2px 0 3px #666;
+    font-family: "helvetica neue", "helvetica", "arial", "sans-serif";
+    font-size: 12pt;
+    border-style: solid;
+    border-width: 0 0 1px 0;
+    border-color: #bbb;
+    z-index: 1;
+}
+#header div.header_left {
+    margin: 0;
+    padding: 0;
+    float: left;
+    line-height: 2em;
+}
+#header div.header_right {
+    margin: 0;
+    padding: 0;
+    float: right;
+    line-height: 2em;
+}
+
+div.clear {
+    clear: both;
+    width: 100%;
+    height: 1px;
+    margin-top: -1px;
+}
+
+#main_search {
+    border: none;
+    padding: 0.4em 0.6em;
+    margin: 0.4em;
+    width: 300px;
+}
+#main_search:focus {
+    outline: none;
+}
+
+#main {
+    padding: 3.5em 6px 6px 6px;
+}
+
+.database_view {
+    font-size: 11px;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    border-spacing: 0;
+    border: 1px solid #ccc;
+
+    cursor: default;
+
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.song_view {
+    margin: 0;
+    padding: 0;
+    background: #fff;
+}
+.song_view td {
+    margin: 0;
+    padding: 0 3px;
+    white-space: nowrap;
+    min-width: 50px;
+    max-width: 350px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.song_view td + td {
+    border-style: solid;
+    border-width: 0 0 0 1px;
+    border-color: #ccc;
+}
+.evenentry {
+    background: #eef;
+}
+.current {
+    background: #ddf;
+}
+
+td.song_view_action {
+    min-width: inherit;
+    padding: 0;
+}
+td.song_view_action a {
+    font-weight: bold;
+    display: inline-block;
+    padding: 0 3px;
+}
+td.song_view_action a:hover {
+    background: #00d;
+    color: #fff;
+    text-decoration: none;
+}
+td.song_view_queue {
+    min-width: inherit;
+}
+td.song_view_time {
+    min-width: inherit;
+    text-align: right;
+}
+
+p.database_view_playall {
+    padding: 0em 1em;
+}

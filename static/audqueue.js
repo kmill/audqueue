@@ -20,14 +20,34 @@ function get_songs(callback) {
   });
 }
 
-function queue_songs(filenames) {
+function get_destinations(callback) {
   $.ajax({
-    url : "/ajax/queue",
+    url : "/ajax/destinations",
     type : "POST",
     dataType : "json",
     cache : false,
     timeout : 30000,
-    data : {filenames : JSON.stringify(filenames)},
+    success : function (d) {
+      if (d.error) {
+        alert("Error getting destinations");
+      } else {
+        callback(d.result);
+      }
+    },
+    error : function () {
+      alert("Error getting destinations");
+    }
+  });
+}
+
+function add_songs(filenames) {
+  $.ajax({
+    url : "/ajax/add",
+    type : "POST",
+    dataType : "json",
+    cache : false,
+    timeout : 30000,
+    data : {destination : window.destination[0], filenames : JSON.stringify(filenames)},
     success : function (d) {
     },
     error : function () {
@@ -292,13 +312,13 @@ function DatabaseView(db) {
     _.each(dblclicksongs, function (sv) {
       filenames.push(sv.song.data.filename);
     });
-    queue_songs(filenames);
+    add_songs(filenames);
   });
 
   $(this.$table).on("click", '[song-filename]', function (e) {
     e.preventDefault();
     var filename = $(this).attr("song-filename");
-    queue_songs([filename]);
+    add_songs([filename]);
   });
 
   this.throttled_search = _.debounce(function () {
@@ -313,7 +333,7 @@ function DatabaseView(db) {
         filenames.push(sv.song.data.filename);
       }
     });
-    queue_songs(filenames);
+    add_songs(filenames);
   });
 }
 DatabaseView.prototype.updateHighlights = function (songviews) {
@@ -529,6 +549,25 @@ $(function () {
 
     dbview.doSearch('');
   }
+
+  $('#view_playlist').click(function (e) {
+    e.preventDefault();
+    window.open(window.destination[1], "_blank");
+  });
+
+  get_destinations(function (destinations) {
+    window.dests = {};
+    window.destination = destinations[0];
+    var $select = $('#destination').empty();
+    destinations.forEach(function (dest, i) {
+      window.dests[dest[0]] = dest;
+      var $option = $('<option>').text(dest[0]).attr("value", dest[0]);
+      $select.append($option);
+    });
+    $select.on("change", function (e) {
+      window.destination = window.dests[$(this).val()];
+    });
+  });
 
   var db = window.db = new Database(loaded_callback);
 });

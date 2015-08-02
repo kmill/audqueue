@@ -1,0 +1,10 @@
+[
+    { "name" : "Local",
+      "type" : "AudaciousQueue",
+      "config" : { }
+    },
+    { "name" : "remote Local",
+      "type" : "RemoteAudaciousQueue",
+      "config" : { "fileprefix" : "http://localhost:3322/file", "host" : "localhost:3323" }
+    },
+]
